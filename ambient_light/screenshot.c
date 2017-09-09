@@ -57,8 +57,8 @@ XColor main_color(XImage *image) {
     );
 
     if (
-      fabs(tmp_clr.red - tmp_clr.green) > GREY_SENSETIVE &&
-      fabs(tmp_clr.blue - tmp_clr.green) > GREY_SENSETIVE
+      fabs(tmp_clr.red/C_DENOM - tmp_clr.green/C_DENOM) > GREY_SENSETIVE &&
+      fabs(tmp_clr.blue/C_DENOM - tmp_clr.green/C_DENOM) > GREY_SENSETIVE
     ) {
       red += tmp_clr.red/C_DENOM;
       green += tmp_clr.green/C_DENOM;

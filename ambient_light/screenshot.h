@@ -6,6 +6,9 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 //------------------------------------------------------------------------------------------------
 #define DISPLAY_WIDTH 1920
 #define DISPLAY_HEIGHT 1080
@@ -13,9 +16,11 @@
 #define PIXELS_STEP 25
 #define T_DELAY 400000000
 #define GREY_SENSETIVE 12
+#define SOCKET_PORT 51117
+#define SOCKET_ADDR 192.168.1.219
 //------------------------------------------------------------------------------------------------
 Display *display;
 struct timespec tr;
 struct timespec tw = {0,T_DELAY};
 //------------------------------------------------------------------------------------------------
-XColor main_color(XImage *image);
+void main_color(XImage *image, int *colors);

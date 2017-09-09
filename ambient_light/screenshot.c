@@ -3,16 +3,31 @@
 int main() {
 
   XImage *image;
-  XColor color;
+  int colors[3];
+  int sock;
+  struct sockaddr_in addr;
+
   if ((display = XOpenDisplay(getenv("DISPLAY"))) == NULL)
   {
     perror("Connect");
     exit(1);
   }
 
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if(sock < 0) {
+    perror("socket");
+    exit(1);
+  }
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(SOCKET_PORT);
+  addr.sin_addr.s_addr = inet_addr("192.168.1.219");
+  sleep(60);
+  if(connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+      perror("connect");
+      exit(2);
+  }
 
   while (1) {
-    printf("Started!\n");
     image = XGetImage(
       display,
       DefaultRootWindow(display), 0, 0,
@@ -21,14 +36,18 @@ int main() {
       AllPlanes,
       ZPixmap
     );
-    color = main_color(image);
+    main_color(image, colors);
     XDestroyImage(image);
     printf(
       "%d - %d - %d\n",
-      color.red/C_DENOM,
-      color.green/C_DENOM,
-      color.blue/C_DENOM
+      colors[0],
+      colors[1],
+      colors[2]
     );
+    if (send(sock, colors, sizeof(int) * 3, 0) < 1) {
+      perror("send");
+      exit(0);
+    }
     nanosleep(&tw, &tr);
   }
 
@@ -39,14 +58,14 @@ int main() {
 
 }
 
-XColor main_color(XImage *image) {
-  XColor tmp_clr, rslt_clr;
+void main_color(XImage *image, int *colors) {
+  XColor tmp_clr;
   unsigned int x = 0,
                y = 0,
                pixels = 0;
-  unsigned long red = 0,
-                green = 0,
-                blue = 0;
+  unsigned int red = 0,
+               green = 0,
+               blue = 0;
 
   while(1) {
     tmp_clr.pixel = XGetPixel(image, x, y);
@@ -66,19 +85,59 @@ XColor main_color(XImage *image) {
       pixels++;
     }
 
-    x += rand() % PIXELS_STEP;
+    x += 1 + rand() % PIXELS_STEP;
     if (x > DISPLAY_WIDTH - 1) {
-      x = rand() % PIXELS_STEP;
-      y += rand() % PIXELS_STEP;
+      x = 1 + rand() % PIXELS_STEP;
+      y += 1 + rand() % PIXELS_STEP;
     }
     if (y > DISPLAY_HEIGHT - 1) {
       break;
     }
   }
+  printf("%d\n", pixels);
+  if (pixels) {
+    float k = 0;
+    int k1 = -1,
+        k2 = -1,
+        k3 = -1;
 
-  rslt_clr.red = (red / pixels) * C_DENOM;
-  rslt_clr.green = (green / pixels) * C_DENOM;
-  rslt_clr.blue = (blue / pixels) * C_DENOM;
+    colors[0] = (red / pixels);
+    colors[1] = (green / pixels);
+    colors[2] = (blue / pixels);
+    printf(
+      "%d - %d - %d\n",
+      colors[0],
+      colors[1],
+      colors[2]
+    );
+    for (int i = 0; i < 3; i++) {
+      if (
+        colors[i] >= colors[0] &&
+        colors[i] >= colors[1] &&
+        colors[i] >= colors[2] &&
+        k1 == -1
+      ) {
+        k1 = i;
+      } else if (
+        colors[i] <= colors[0] &&
+        colors[i] <= colors[1] &&
+        colors[i] <= colors[2] &&
+        k3 == -1
+      ) {
+        k3 = i;
+      } else {
+        k2 = i;
+      }
+    }
+    k = (float)63 / (float)colors[k1];
+    printf("%f %d %d %d\n", k, k1, k2, k3);
+    colors[k1] *= k;
+    colors[k2] *= k;
+    colors[k3] *= k;
+  } else {
+    colors[0] = 63;
+    colors[1] = 63;
+    colors[2] = 63;
+  }
 
-  return rslt_clr;
 }

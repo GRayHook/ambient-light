@@ -5,12 +5,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 //------------------------------------------------------------------------------------------------
 #define DISPLAY_WIDTH 1920
 #define DISPLAY_HEIGHT 1080
 #define C_DENOM 1024
-#define PIXELS_STEP 20
-#define  T_DELAY 400000000
+#define PIXELS_STEP 30
+#define T_DELAY 400000000
+#define GREY_SENSETIVE 5
 //------------------------------------------------------------------------------------------------
 Display *display;
 struct timespec tr;

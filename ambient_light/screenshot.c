@@ -56,9 +56,15 @@ XColor main_color(XImage *image) {
       &tmp_clr
     );
 
-    red += tmp_clr.red/C_DENOM;
-    green += tmp_clr.green/C_DENOM;
-    blue += tmp_clr.blue/C_DENOM;
+    if (
+      fabs(tmp_clr.red - tmp_clr.green) > GREY_SENSETIVE &&
+      fabs(tmp_clr.blue - tmp_clr.green) > GREY_SENSETIVE
+    ) {
+      red += tmp_clr.red/C_DENOM;
+      green += tmp_clr.green/C_DENOM;
+      blue += tmp_clr.blue/C_DENOM;
+      pixels++;
+    }
 
     x += rand() % PIXELS_STEP;
     if (x > DISPLAY_WIDTH - 1) {
@@ -67,8 +73,6 @@ XColor main_color(XImage *image) {
     }
     if (y > DISPLAY_HEIGHT - 1) {
       break;
-    } else {
-      pixels++;
     }
   }
 

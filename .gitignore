@@ -2,4 +2,4 @@ run
 *.a
 *.o
 *.gch
-examples
+ambient_screen

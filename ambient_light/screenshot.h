@@ -13,11 +13,12 @@
 #define DISPLAY_WIDTH 1920
 #define DISPLAY_HEIGHT 1080
 #define C_DENOM 1024
-#define PIXELS_STEP 25
-#define T_DELAY 400000000
+#define PIXELS_STEP 12
+#define T_DELAY 800000000
+#define T_SLEEP 1
 #define GREY_SENSETIVE 12
 #define SOCKET_PORT 51117
-#define SOCKET_ADDR 192.168.1.219
+#define SOCKET_ADDR "192.168.1.219"
 //------------------------------------------------------------------------------------------------
 Display *display;
 struct timespec tr;

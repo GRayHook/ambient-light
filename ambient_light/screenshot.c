@@ -6,6 +6,9 @@ int main() {
   int colors[3];
   int sock;
   struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(SOCKET_PORT);
+  addr.sin_addr.s_addr = inet_addr(SOCKET_ADDR);
 
   if ((display = XOpenDisplay(getenv("DISPLAY"))) == NULL)
   {
@@ -18,10 +21,9 @@ int main() {
     perror("socket");
     exit(1);
   }
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(SOCKET_PORT);
-  addr.sin_addr.s_addr = inet_addr("192.168.1.219");
-  sleep(60);
+
+  sleep(T_SLEEP);
+
   if(connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       perror("connect");
       exit(2);
@@ -59,6 +61,7 @@ int main() {
 }
 
 void main_color(XImage *image, int *colors) {
+
   XColor tmp_clr;
   unsigned int x = 0,
                y = 0,
@@ -94,7 +97,7 @@ void main_color(XImage *image, int *colors) {
       break;
     }
   }
-  printf("%d\n", pixels);
+
   if (pixels) {
     float k = 0;
     int k1 = -1,
@@ -104,12 +107,7 @@ void main_color(XImage *image, int *colors) {
     colors[0] = (red / pixels);
     colors[1] = (green / pixels);
     colors[2] = (blue / pixels);
-    printf(
-      "%d - %d - %d\n",
-      colors[0],
-      colors[1],
-      colors[2]
-    );
+    
     for (int i = 0; i < 3; i++) {
       if (
         colors[i] >= colors[0] &&

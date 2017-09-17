@@ -1,5 +1,11 @@
 main:
-	gcc screenshot.c -lX11 -o ambient_screen
+	gcc screenshot.c -lX11 -o run
 
 run: main
-	./ambient_screen
+	./run
+
+clean:
+	rm -f *.o *.gch run
+
+install: main
+	cp run /usr/local/bin/ambient_light

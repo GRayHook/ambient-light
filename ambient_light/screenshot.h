@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 //------------------------------------------------------------------------------------------------
+#define START_DELAY 60
 #define DISPLAY_WIDTH 1920
 #define DISPLAY_HEIGHT 1080
 #define C_DENOM 1024
@@ -23,4 +24,7 @@ Display *display;
 struct timespec tr;
 struct timespec tw = {0,T_DELAY};
 //------------------------------------------------------------------------------------------------
+void send_g13(int * colors);
 void main_color(XImage *image, int *colors);
+
+FILE *right_fopen(char *path, char mode);

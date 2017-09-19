@@ -21,7 +21,7 @@ int main() {
   addr.sin_family = AF_INET;
   addr.sin_port = htons(SOCKET_PORT);
   addr.sin_addr.s_addr = inet_addr("192.168.1.219");
-  sleep(60);
+  sleep(START_DELAY);
   if(connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       perror("connect");
       exit(2);
@@ -48,6 +48,7 @@ int main() {
       perror("send");
       exit(0);
     }
+    send_g13(colors);
     nanosleep(&tw, &tr);
   }
 
@@ -58,6 +59,14 @@ int main() {
 
 }
 
+void send_g13(int * colors) {
+  FILE *fp;
+  fp = right_fopen((char *)"/tmp/g13-0", 'w');
+
+  fprintf(fp, "rgb %d %d %d", colors[0]*4, colors[1]*4, colors[2]*4);
+
+  fclose(fp);
+}
 void main_color(XImage *image, int *colors) {
   XColor tmp_clr;
   unsigned int x = 0,
@@ -140,4 +149,13 @@ void main_color(XImage *image, int *colors) {
     colors[2] = 63;
   }
 
+}
+
+FILE *right_fopen(char *path, char mode) {
+  FILE *fp;
+  if((fp=fopen(path, &mode))==NULL) {
+    printf("Unable open file (output).\n");
+    exit(1);
+  }
+  return fp;
 }

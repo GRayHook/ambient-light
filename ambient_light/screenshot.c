@@ -85,7 +85,7 @@ void main_color(XImage *image, int *colors) {
     );
 
     if (
-      fabs(tmp_clr.red/C_DENOM - tmp_clr.green/C_DENOM) > GREY_SENSETIVE &&
+      fabs(tmp_clr.red/C_DENOM - tmp_clr.green/C_DENOM) > GREY_SENSETIVE ||
       fabs(tmp_clr.blue/C_DENOM - tmp_clr.green/C_DENOM) > GREY_SENSETIVE
     ) {
       red += tmp_clr.red/C_DENOM;
@@ -113,12 +113,6 @@ void main_color(XImage *image, int *colors) {
     colors[0] = (red / pixels);
     colors[1] = (green / pixels);
     colors[2] = (blue / pixels);
-    printf(
-      "%d - %d - %d\n",
-      colors[0],
-      colors[1],
-      colors[2]
-    );
     for (int i = 0; i < 3; i++) {
       if (
         colors[i] >= colors[0] &&
@@ -139,10 +133,10 @@ void main_color(XImage *image, int *colors) {
       }
     }
     k = (float)63 / (float)colors[k1];
-    printf("%f %d %d %d\n", k, k1, k2, k3);
     colors[k1] *= k;
     colors[k2] *= k;
     colors[k3] *= k;
+    printf("ks: %d %d %d\n", k1, k2, k3);
   } else {
     colors[0] = 63;
     colors[1] = 63;

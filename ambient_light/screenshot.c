@@ -60,12 +60,15 @@ int main() {
 }
 
 void send_g13(int * colors) {
-  FILE *fp;
-  fp = right_fopen((char *)"/tmp/g13-0", 'w');
+  int drisnya = check_file((char *)PATHG13);
+  printf("%d\n", drisnya);
+  if(drisnya){
+    FILE *fp;
 
-  fprintf(fp, "rgb %d %d %d", colors[0]*4, colors[1]*4, colors[2]*4);
-
-  fclose(fp);
+    fp = right_fopen((char *)PATHG13, 'w');
+    fprintf(fp, "rgb %d %d %d", colors[0]*4, colors[1]*4, colors[2]*4);
+    fclose(fp);
+  }
 }
 void main_color(XImage *image, int *colors) {
   XColor tmp_clr;
@@ -152,4 +155,13 @@ FILE *right_fopen(char *path, char mode) {
     exit(1);
   }
   return fp;
+}
+int check_file(char *filepath){
+    struct stat sb;
+    if(stat(filepath, &sb) == -1) return 0;
+    if(!S_ISFIFO(sb.st_mode)) return 0;
+    if(sb.st_uid == getuid() && sb.st_mode & S_IWUSR) return 1;
+    if(sb.st_gid == getgid() && sb.st_mode & S_IWGRP) return 1;
+    if(sb.st_mode & S_IWOTH) return 1;
+    return 0;
 }

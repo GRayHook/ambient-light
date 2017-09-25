@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 //------------------------------------------------------------------------------------------------
 #define START_DELAY 1
 #define DISPLAY_WIDTH 1920
@@ -19,6 +21,7 @@
 #define GREY_SENSETIVE 12
 #define SOCKET_PORT 51117
 #define SOCKET_ADDR 192.168.1.219
+#define PATHG13 "/tmp/g13-0"
 //------------------------------------------------------------------------------------------------
 Display *display;
 struct timespec tr;
@@ -28,3 +31,4 @@ void send_g13(int * colors);
 void main_color(XImage *image, int *colors);
 
 FILE *right_fopen(char *path, char mode);
+int check_file(char *filepath);

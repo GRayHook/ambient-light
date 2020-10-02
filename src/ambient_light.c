@@ -1,4 +1,24 @@
-#include "ambient_light.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <string.h>
+#include <time.h>
+#include <math.h>
+#include <signal.h>
+
+#include <color.h>
+#include <handlers.h>
+
+#define T_DELAY 100000000
+#define PIXELS_STEP 50
+#define GREY_SENSETIVE 12
+
+static int exit_flag = 0;
+
+struct timespec tr;
+struct timespec tw = {0,T_DELAY};
 
 static inline uint8_t get_red(uint32_t pixel)
 {
@@ -11,18 +31,6 @@ static inline uint8_t get_green(uint32_t pixel)
 static inline uint8_t get_blue(uint32_t pixel)
 {
 	return pixel & 0xff;
-}
-
-void send_g13(uint8_t * colors)
-{
-	int drisnya = check_file((char *)PATHG13);
-	if(drisnya){
-		FILE *fp;
-
-		fp = right_fopen((char *)PATHG13, 'w');
-		fprintf(fp, "rgb %u %u %u", colors[RED], colors[GREEN], colors[BLUE]);
-		fclose(fp);
-	}
 }
 
 void main_color(XImage * image, uint8_t * colors)
@@ -86,73 +94,56 @@ void main_color(XImage * image, uint8_t * colors)
 	colors[kmin] = 0;
 }
 
-int main() {
-	XImage *image;
-	uint8_t colors[3];
-	int sock;
-	struct sockaddr_in addr;
+void term(int signum)
+{
+	exit_flag = 1;
+}
 
-	if ((display = XOpenDisplay(getenv("DISPLAY"))) == NULL)
+int main()
+{
+	struct sigaction action = { 0 };
+	action.sa_handler = term;
+	sigaction(SIGTERM, &action, NULL);
+
+	Display * display = XOpenDisplay(getenv("DISPLAY"));
+	if (display == NULL)
 	{
 		perror("Connect");
 		exit(1);
 	}
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock < 0) {
-		perror("socket");
-		exit(1);
-	}
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(SOCKET_PORT);
-	addr.sin_addr.s_addr = inet_addr(SOCKET_ADDR);
-	sleep(START_DELAY);
-	if(connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-			perror("connect");
-			exit(2);
-	}
+	Window root = DefaultRootWindow(display);
+	XWindowAttributes gwa = { 0 };
+	XGetWindowAttributes(display, root, &gwa);
+	int width = gwa.width,
+	    height = gwa.height;
 
-	while (1) {
-		image = XGetImage(
-			display,
-			DefaultRootWindow(display), 0, 0,
-			DISPLAY_WIDTH,
-			DISPLAY_HEIGHT,
-			AllPlanes,
-			ZPixmap
-		);
+	for (color_handler_t ** transport = transports; *transport != NULL; transport++)
+		if ((*transport)->prepare) (*transport)->prepare();
+
+	while (!exit_flag)
+	{
+		XImage * image = XGetImage(display,
+		                           root, 0, 0,
+		                           width,
+		                           height,
+		                           AllPlanes,
+		                           ZPixmap);
+
+		uint8_t colors[3] = { 0 };
 		main_color(image, colors);
 		XDestroyImage(image);
 
-		if (send(sock, colors, sizeof(uint8_t) * 3, 0) < 1) {
-			perror("send");
-			exit(0);
-		}
-		send_g13(colors);
+		for (color_handler_t ** transport = transports; *transport != NULL; transport++)
+			(*transport)->handler(colors);
+
 		nanosleep(&tw, &tr);
 	}
 
+	for (color_handler_t ** transport = transports; *transport != NULL; transport++)
+		if ((*transport)->exit) (*transport)->exit();
+
 	XCloseDisplay(display);
 
-
 	return 0;
-
-}
-
-FILE *right_fopen(char *path, char mode) {
-	FILE *fp;
-	if((fp=fopen(path, &mode))==NULL) {
-		printf("Unable open file (output).\n");
-		exit(1);
-	}
-	return fp;
-}
-int check_file(char *filepath){
-		struct stat sb;
-		if(stat(filepath, &sb) == -1) return 0;
-		if(!S_ISFIFO(sb.st_mode)) return 0;
-		if(sb.st_uid == getuid() && sb.st_mode & S_IWUSR) return 1;
-		if(sb.st_gid == getgid() && sb.st_mode & S_IWGRP) return 1;
-		if(sb.st_mode & S_IWOTH) return 1;
-		return 0;
 }

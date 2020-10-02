@@ -2,11 +2,12 @@
 
 all: prepare build/ambient_light
 
-build/ambient_light: src/ambient_light.c src/ambient_light.h
-	gcc src/ambient_light.c -lX11 -o build/ambient_light
+build/ambient_light: src/ambient_light.c src/*.h src/transports/*
+	gcc -Isrc src/transports/*.c src/ambient_light.c -lX11 -o build/ambient_light -g
 
 ./build:
 	mkdir build -p
+	mkdir build/transports -p
 
 prepare: ./build
 

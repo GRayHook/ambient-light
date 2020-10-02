@@ -13,10 +13,82 @@ static inline uint8_t get_blue(uint32_t pixel)
 	return pixel & 0xff;
 }
 
-int main() {
+void send_g13(uint8_t * colors)
+{
+	int drisnya = check_file((char *)PATHG13);
+	if(drisnya){
+		FILE *fp;
 
+		fp = right_fopen((char *)PATHG13, 'w');
+		fprintf(fp, "rgb %u %u %u", colors[RED], colors[GREEN], colors[BLUE]);
+		fclose(fp);
+	}
+}
+
+void main_color(XImage * image, uint8_t * colors)
+{
+	unsigned int pixels = 0;
+	unsigned long int ared = 0,
+	                  agreen = 0,
+	                  ablue = 0;
+
+	uint32_t * pixel = (uint32_t *)image->data,
+	         * last_pixel = ((uint32_t *)image->data) + image->width * image->height - 1;
+	while(pixel <= last_pixel)
+	{
+		uint8_t red   = get_red(*pixel),
+		        green = get_green(*pixel),
+		        blue  = get_blue(*pixel);
+
+		if (fabs(red - green) > GREY_SENSETIVE ||
+			fabs(blue - green) > GREY_SENSETIVE)
+		{
+			ared += red;
+			agreen += green;
+			ablue += blue;
+			pixels++;
+		}
+
+		pixel += PIXELS_STEP;
+	}
+
+	if (!pixels)
+	{
+		colors[RED] = 255;
+		colors[GREEN] = 255;
+		colors[BLUE] = 255;
+		return;
+	}
+
+	colors[RED] = (ared / pixels);
+	colors[GREEN] = (agreen / pixels);
+	colors[BLUE] = (ablue / pixels);
+
+	int kmax = colors[GREEN] <= colors[RED] && colors[BLUE] <= colors[RED] ? 0 :
+	           colors[RED] <= colors[GREEN] && colors[BLUE] <= colors[GREEN] ? 1 :
+	           2;
+	int kmin = colors[RED] <= colors[GREEN] && colors[RED] <= colors[BLUE] ? 0 :
+	           colors[GREEN] <= colors[RED] && colors[GREEN] <= colors[BLUE] ? 1 :
+	           2;
+	int kmid = (0 + 1 + 2) - kmin - kmax;
+
+	/* Adjust saturation and lightness(brightness).
+	 * Special case of HLS's Hue formula when Cmax == 100% and Cmin == 0%.
+	 * We need to set greatest color to maximum and lessest to zero.
+	 * Middle color calculates with respect to hue. */
+	if (colors[kmid] == colors[kmax])
+		colors[kmid] = 255;
+	else if (colors[kmid] == colors[kmin])
+		colors[kmid] = 0;
+	else
+		colors[kmid] = (float)(colors[kmid] - colors[kmin]) / (float)(colors[kmax] - colors[kmin]) * 255;
+	colors[kmax] = 255;
+	colors[kmin] = 0;
+}
+
+int main() {
 	XImage *image;
-	uint32_t colors[3];
+	uint8_t colors[3];
 	int sock;
 	struct sockaddr_in addr;
 
@@ -52,7 +124,7 @@ int main() {
 		main_color(image, colors);
 		XDestroyImage(image);
 
-		if (send(sock, colors, sizeof(uint32_t) * 3, 0) < 1) {
+		if (send(sock, colors, sizeof(uint8_t) * 3, 0) < 1) {
 			perror("send");
 			exit(0);
 		}
@@ -64,86 +136,6 @@ int main() {
 
 
 	return 0;
-
-}
-
-void send_g13(int * colors) {
-	int drisnya = check_file((char *)PATHG13);
-	if(drisnya){
-		FILE *fp;
-
-		fp = right_fopen((char *)PATHG13, 'w');
-		fprintf(fp, "rgb %d %d %d", colors[0], colors[1], colors[2]);
-		fclose(fp);
-	}
-}
-void main_color(XImage * image, uint32_t * colors) {
-	XColor tmp_clr;
-	unsigned int x = 0,
-	             y = 0,
-	             pixels = 0;
-	unsigned long int ared = 0,
-	                  agreen = 0,
-	                  ablue = 0;
-
-	uint32_t * pixel = (uint32_t *)image->data;
-	while(1)
-	{
-		uint8_t red =   get_red(*pixel),
-		        green = get_green(*pixel),
-		        blue =  get_blue(*pixel);
-
-		if (fabs(red - green) > GREY_SENSETIVE ||
-			fabs(blue - green) > GREY_SENSETIVE)
-		{
-			ared += red;
-			agreen += green;
-			ablue += blue;
-			pixels++;
-		}
-
-		pixel += PIXELS_STEP;
-		if (pixel >= ((uint32_t *)image->data) + DISPLAY_HEIGHT * DISPLAY_WIDTH)
-			break;
-	}
-
-	if (pixels) {
-		float k = 0;
-		int k1 = -1,
-				k2 = -1,
-				k3 = -1;
-
-		colors[0] = (ared / pixels);
-		colors[1] = (agreen / pixels);
-		colors[2] = (ablue / pixels);
-		for (int i = 0; i < 3; i++) {
-			if (
-				colors[i] >= colors[0] &&
-				colors[i] >= colors[1] &&
-				colors[i] >= colors[2] &&
-				k1 == -1
-			) {
-				k1 = i;
-			} else if (
-				colors[i] <= colors[0] &&
-				colors[i] <= colors[1] &&
-				colors[i] <= colors[2] &&
-				k3 == -1
-			) {
-				k3 = i;
-			} else {
-				k2 = i;
-			}
-		}
-		k = (float)255 / (float)colors[k1];
-		colors[k1] = 255;
-		colors[k2] *= k;
-		colors[k3] *= k;
-	} else {
-		colors[0] = 255;
-		colors[1] = 255;
-		colors[2] = 255;
-	}
 
 }
 

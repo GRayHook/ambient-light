@@ -15,7 +15,7 @@
 #define START_DELAY 1
 #define DISPLAY_WIDTH 2560
 #define DISPLAY_HEIGHT 1080
-#define PIXELS_STEP 250
+#define PIXELS_STEP 50
 #define T_DELAY 100000000
 #define GREY_SENSETIVE 12
 #define SOCKET_PORT 51117
@@ -25,9 +25,12 @@
 Display *display;
 struct timespec tr;
 struct timespec tw = {0,T_DELAY};
+typedef enum {
+	RED = 0,
+	GREEN = 1,
+	BLUE = 2
+} color_e;
 //------------------------------------------------------------------------------------------------
-void send_g13(int * colors);
-void main_color(XImage * image, uint32_t * colors);
 
 FILE *right_fopen(char *path, char mode);
 int check_file(char *filepath);

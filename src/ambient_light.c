@@ -1,4 +1,4 @@
-#include "screenshot.h"
+#include "ambient_light.h"
 
 static inline uint8_t get_red(uint32_t pixel)
 {

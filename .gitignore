@@ -1,5 +1,4 @@
-run
 *.a
 *.o
 *.gch
-ambient_screen
+ambient_light

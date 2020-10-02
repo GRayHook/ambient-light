@@ -62,9 +62,9 @@ void main_color(XImage * image, uint8_t * colors)
 
 	if (!pixels)
 	{
-		colors[RED] = 255;
-		colors[GREEN] = 255;
-		colors[BLUE] = 255;
+		colors[RED] = 0xff;
+		colors[GREEN] = 0xff;
+		colors[BLUE] = 0xff;
 		return;
 	}
 
@@ -72,25 +72,25 @@ void main_color(XImage * image, uint8_t * colors)
 	colors[GREEN] = (agreen / pixels);
 	colors[BLUE] = (ablue / pixels);
 
-	int kmax = colors[GREEN] <= colors[RED] && colors[BLUE] <= colors[RED] ? 0 :
-	           colors[RED] <= colors[GREEN] && colors[BLUE] <= colors[GREEN] ? 1 :
-	           2;
-	int kmin = colors[RED] <= colors[GREEN] && colors[RED] <= colors[BLUE] ? 0 :
-	           colors[GREEN] <= colors[RED] && colors[GREEN] <= colors[BLUE] ? 1 :
-	           2;
-	int kmid = (0 + 1 + 2) - kmin - kmax;
+	int kmax = colors[GREEN] <= colors[RED] && colors[BLUE] <= colors[RED] ? RED :
+	           colors[RED] <= colors[GREEN] && colors[BLUE] <= colors[GREEN] ? GREEN :
+	           BLUE;
+	int kmin = colors[RED] <= colors[GREEN] && colors[RED] <= colors[BLUE] ? RED :
+	           colors[GREEN] <= colors[RED] && colors[GREEN] <= colors[BLUE] ? GREEN :
+	           BLUE;
+	int kmid = (RED + GREEN + BLUE) - kmin - kmax;
 
 	/* Adjust saturation and lightness(brightness).
 	 * Special case of HLS's Hue formula when Cmax == 100% and Cmin == 0%.
 	 * We need to set greatest color to maximum and lessest to zero.
 	 * Middle color calculates with respect to hue. */
 	if (colors[kmid] == colors[kmax])
-		colors[kmid] = 255;
+		colors[kmid] = 0xff;
 	else if (colors[kmid] == colors[kmin])
 		colors[kmid] = 0;
 	else
-		colors[kmid] = (float)(colors[kmid] - colors[kmin]) / (float)(colors[kmax] - colors[kmin]) * 255;
-	colors[kmax] = 255;
+		colors[kmid] = (float)(colors[kmid] - colors[kmin]) / (float)(colors[kmax] - colors[kmin]) * 0xff;
+	colors[kmax] = 0xff;
 	colors[kmin] = 0;
 }
 

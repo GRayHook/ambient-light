@@ -16,14 +16,14 @@ just type
     
 ## Install
 
-Install it to `/usr/loca/bin`:
+Install it to `/usr/local/bin`:
     
     # make install
     
     
 ## Features
 
-It can send main color to [g13 driver](https://github.com/ecraven/g13) and [g19 driver](https://github.com/GRayHook/Logitech-G19-Linux-Daemon)(have not pushed commits yet).
+It can send main color to [g13 driver](https://github.com/ecraven/g13) and [g19 driver](https://github.com/GRayHook/Logitech-G19-Linux-Daemon).
 
 ## How to add my transport?
 

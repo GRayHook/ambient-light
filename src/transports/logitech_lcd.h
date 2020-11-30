@@ -2,4 +2,4 @@
  * See: https://github.com/GRayHook/Logitech-G19-Linux-Daemon/
  */
 
-color_handler_t logitech_lcd;
+extern color_handler_t logitech_lcd;

@@ -2,4 +2,4 @@
  * See: https://github.com/ecraven/g13
  */
 
-color_handler_t g13;
+extern color_handler_t g13;

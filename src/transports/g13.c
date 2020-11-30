@@ -10,8 +10,6 @@
 
 #include <color.h>
 
-#include "g13.h"
-
 #define PATHG13 "/tmp/g13-0"
 
 void g13_prepare();

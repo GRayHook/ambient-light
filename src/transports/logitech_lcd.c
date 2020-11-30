@@ -10,8 +10,6 @@
 
 #include <color.h>
 
-#include "logitech_lcd.h"
-
 #define SOCKET_PORT 51117
 #define SOCKET_ADDR "127.0.0.1"
 

@@ -14,7 +14,7 @@
 #define SOCKET_ADDR "127.0.0.1"
 
 void logitech_lcd_prepare();
-void logitech_lcd_handler(uint8_t * colors);
+void logitech_lcd_handler(colors_t * colors);
 void logitech_lcd_exit();
 
 color_handler_t logitech_lcd = {
@@ -48,7 +48,7 @@ void logitech_lcd_prepare()
 	}
 }
 
-void logitech_lcd_handler(uint8_t * colors)
+void logitech_lcd_handler(colors_t * colors)
 {
 	if (!sock)
 		return;

@@ -13,7 +13,7 @@
 #define PATHG13 "/tmp/g13-0"
 
 void g13_prepare();
-void g13_handler(uint8_t * colors);
+void g13_handler(colors_t * colors);
 void g13_exit();
 
 color_handler_t g13 = {
@@ -47,12 +47,12 @@ void g13_prepare()
 	}
 }
 
-void g13_handler(uint8_t * colors)
+void g13_handler(colors_t * colors)
 {
 	if (!fp)
 		return;
 
-	fprintf(fp, "rgb %u %u %u", colors[RED], colors[GREEN], colors[BLUE]);
+	fprintf(fp, "rgb %u %u %u", colors->red, colors->green, colors->blue);
 	fflush(fp);
 }
 

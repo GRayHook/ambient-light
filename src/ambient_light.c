@@ -33,7 +33,7 @@ static inline uint8_t get_blue(uint32_t pixel)
 	return pixel & 0xff;
 }
 
-void main_color(XImage * image, uint8_t * colors)
+void main_color(XImage * image, colors_t * colors)
 {
 	unsigned int pixels = 0;
 	unsigned long int ared = 0,
@@ -62,36 +62,37 @@ void main_color(XImage * image, uint8_t * colors)
 
 	if (!pixels)
 	{
-		colors[RED] = 0xff;
-		colors[GREEN] = 0xff;
-		colors[BLUE] = 0xff;
+		colors->red = 0xff;
+		colors->green = 0xff;
+		colors->blue = 0xff;
 		return;
 	}
 
-	colors[RED] = (ared / pixels);
-	colors[GREEN] = (agreen / pixels);
-	colors[BLUE] = (ablue / pixels);
+	colors->red = (ared / pixels);
+	colors->green = (agreen / pixels);
+	colors->blue = (ablue / pixels);
 
-	int kmax = colors[GREEN] <= colors[RED] && colors[BLUE] <= colors[RED] ? RED :
-	           colors[RED] <= colors[GREEN] && colors[BLUE] <= colors[GREEN] ? GREEN :
-	           BLUE;
-	int kmin = colors[RED] <= colors[GREEN] && colors[RED] <= colors[BLUE] ? RED :
-	           colors[GREEN] <= colors[RED] && colors[GREEN] <= colors[BLUE] ? GREEN :
-	           BLUE;
-	int kmid = (RED + GREEN + BLUE) - kmin - kmax;
+	uint8_t * kmax = colors->green <= colors->red && colors->blue <= colors->red ? &colors->red :
+	                 colors->red <= colors->green && colors->blue <= colors->green ? &colors->green :
+	                 &colors->blue;
+	uint8_t * kmin = colors->red <= colors->green && colors->red <= colors->blue ? &colors->red :
+	                 colors->green <= colors->red && colors->green <= colors->blue ? &colors->green :
+	                 &colors->blue;
+	/* don't mind overflow */
+	uint8_t * kmid = &colors->red + (unsigned long)&colors->green + (unsigned long)&colors->blue - (unsigned long)kmin - (unsigned long)kmax;
 
 	/* Adjust saturation and lightness(brightness).
 	 * Special case of HLS's Hue formula when Cmax == 100% and Cmin == 0%.
 	 * We need to set greatest color to maximum and lessest to zero.
 	 * Middle color calculates with respect to hue. */
-	if (colors[kmid] == colors[kmax])
-		colors[kmid] = 0xff;
-	else if (colors[kmid] == colors[kmin])
-		colors[kmid] = 0;
+	if (*kmid == *kmax)
+		*kmid = 0xff;
+	else if (*kmid == *kmin)
+		*kmid = 0;
 	else
-		colors[kmid] = (float)(colors[kmid] - colors[kmin]) / (float)(colors[kmax] - colors[kmin]) * 0xff;
-	colors[kmax] = 0xff;
-	colors[kmin] = 0;
+		*kmid = (float)(*kmid - *kmin) / (float)(*kmax - *kmin) * 0xff;
+	*kmax = 0xff;
+	*kmin = 0;
 }
 
 void term(int signum)
@@ -130,12 +131,12 @@ int main()
 		                           AllPlanes,
 		                           ZPixmap);
 
-		uint8_t colors[3] = { 0 };
-		main_color(image, colors);
+		colors_t colors = { 0 };
+		main_color(image, &colors);
 		XDestroyImage(image);
 
 		for (color_handler_t ** transport = transports; *transport != NULL; transport++)
-			(*transport)->handler(colors);
+			(*transport)->handler(&colors);
 
 		nanosleep(&tw, &tr);
 	}

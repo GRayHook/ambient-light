@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -12,8 +15,9 @@
 #include <handlers.h>
 
 #define T_DELAY 25000000
-#define PIXELS_STEP 33
+#define PIXELS_STEP 11
 #define GREY_SENSETIVE 12
+#define LAST_COLORS_NUM 5
 
 static int exit_flag = 0;
 
@@ -125,21 +129,31 @@ int main()
 	for (color_handler_t ** transport = transports; *transport != NULL; transport++)
 		if ((*transport)->prepare) (*transport)->prepare();
 
-#define LAST_COLORS_NUM 10
 	colors_t * colors = calloc(LAST_COLORS_NUM, sizeof(colors_t));
 	unsigned last = 0;
 
+	XImage *image;
+	XShmSegmentInfo shminfo;
+
+	image = XShmCreateImage(display, DefaultVisual(display,0), 24,
+	                        ZPixmap, NULL, &shminfo, 100, 100);
+
+	shminfo.shmid = shmget(IPC_PRIVATE,
+	                       image->bytes_per_line * image->height,
+	                       IPC_CREAT|0777);
+
+	shminfo.shmaddr = image->data = shmat(shminfo.shmid, 0, 0);
+	shminfo.readOnly = False;
+
+	XShmAttach(display, &shminfo);
+
 	while (!exit_flag)
 	{
-		XImage * image = XGetImage(display,
-		                           root, 0, 0,
-		                           width,
-		                           height,
-		                           AllPlanes,
-		                           ZPixmap);
+		XShmGetImage(display,
+		             root, image, 0, 0,
+		             AllPlanes);
 
 		main_color(image, colors + last % LAST_COLORS_NUM);
-		XDestroyImage(image);
 		last++;
 
 		int i = last % LAST_COLORS_NUM;
@@ -194,6 +208,9 @@ int main()
 
 		nanosleep(&tw, &tr);
 	}
+
+	XShmDetach(display, &shminfo);
+	XDestroyImage(image);
 
 	for (color_handler_t ** transport = transports; *transport != NULL; transport++)
 		if ((*transport)->exit) (*transport)->exit();
